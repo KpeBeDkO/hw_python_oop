@@ -1,18 +1,15 @@
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Type
+
+
+@dataclass
 class InfoMessage:
     """Информационное сообщение о тренировке."""
-    def __init__(
-        self,
-        training_type: str,
-        duration: float,
-        distance: float,
-        speed: float,
-        calories: float,
-    ) -> None:
-        self.training_type = training_type
-        self.duration = duration
-        self.distance = distance
-        self.speed = speed
-        self.calories = calories
+    training_type: str
+    duration: float
+    distance: float
+    speed: float
+    calories: float
 
     def get_message(self) -> str:
         return (
@@ -43,17 +40,15 @@ class Training:
 
     def get_distance(self) -> float:
         """Получить дистанцию в км."""
-        distance = self.action * self.LEN_STEP / self.M_IN_KM
-        return distance
+        return self.action * self.LEN_STEP / self.M_IN_KM
 
     def get_mean_speed(self) -> float:
         """Получить среднюю скорость движения. км.ч."""
-        mean_speed = self.get_distance() / self.duration
-        return mean_speed
+        return self.get_distance() / self.duration
 
     def get_spent_calories(self):
         """Получить количество затраченных калорий."""
-        pass
+        raise NotImplementedError
 
     def show_training_info(self) -> InfoMessage:
         """Вернуть информационное сообщение о выполненной тренировке."""
@@ -116,7 +111,7 @@ class SportsWalking(Training):
             self.IN_WATER_CONST_1 * self.weight
             + (speed_in_m_sec ** 2 / height_in_m)
             * self.IN_WATER_CONST_2 * self.weight
-            ) * training_time_in_min
+        ) * training_time_in_min
 
         return spend_calories
 
@@ -162,25 +157,29 @@ class Swimming(Training):
 
 def read_package(
     workout_type: str,
-    data: list
-) -> Training:
+    data: List[int]
+) -> Optional[Training]:
     code_training_class = CODE_TRAINING.get(workout_type)
     if code_training_class:
         class_instance = code_training_class(*data)
-    return class_instance
+    try:
+        return class_instance
+    except NameError:
+        return print('Пусто')
 
 
-CODE_TRAINING: dict = {
+CODE_TRAINING: Dict[str, Type[Training]] = {
     'SWM': Swimming,
     'RUN': Running,
     'WLK': SportsWalking,
 }
 
 
-def main(training: Training) -> None:
+def main(training: Optional[Training]) -> None:
     """Главная функция."""
-    info = training.show_training_info()
-    print(info.get_message())
+    if training:
+        info = training.show_training_info()
+        print(info.get_message())
 
 
 if __name__ == '__main__':
